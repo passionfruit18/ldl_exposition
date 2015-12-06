@@ -1,0 +1,95 @@
+
+Digraph dfa1 {
+initial -> 1
+1 -> 2[label="a"]
+2 -> 1[label="b"]
+2 -> final
+}
+
+Digraph dfa2 {
+initial -> 1
+1 -> 2[label="a"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+2 -> final
+}
+
+Digraph dfa3 {
+initial -> 1
+initial  [shape=polygon,sides=6,color=red]
+1 -> 2[label="a"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+final  [shape=polygon,sides=6,peripheries=2,color=green]
+2 -> final
+}
+Digraph dfa4 {
+initial -> 1
+initial  [shape=polygon,sides=5,peripheries=3,color=lightblue]
+1 -> 2[label="a"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+final  [shape=polygon,sides=6,peripheries=2,color=red]
+2 -> final
+3 -> final
+}
+
+Digraph dfa5 {
+initial -> 1
+initial  [shape=polygon,sides=6,color=lightblue]
+1 -> 2[label="a"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+final  [shape=polygon,sides=6,peripheries=2,color=green]
+2 -> final
+3 -> final
+}
+
+Digraph dfa6 {
+initial -> 1
+initial  [shape=polygon,sides=6,color=lightblue]
+1 -> 3[label="a"]
+1 -> 1[label="b"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+final  [shape=polygon,sides=6,peripheries=2,color=green]
+2 -> final
+3 -> final
+}
+
+Digraph dfa7 {
+initial -> 1
+initial  [shape=polygon,sides=6,color=lightblue]
+1 -> 3[label="a"]
+1 -> 1[label="b"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+2[peripheries=2, color=green]
+3[peripheries=2, color=green]
+final  [shape=polygon,sides=6,peripheries=2,color=green]
+2 -> final
+3 -> final
+}
+
+Digraph dfa8 {
+initial -> 1
+-> 1
+initial  [shape=polygon,sides=6,color=lightblue]
+1 -> 3[label="a"]
+1 -> 1[label="b"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+2[peripheries=2, color=green]
+3[peripheries=2, color=green]
+}
+
+Digraph dfa9 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+1 -> 3[label="a"]
+1 -> 1[label="b"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+2[peripheries=2, color=green]
+3[peripheries=2, color=green]
+}

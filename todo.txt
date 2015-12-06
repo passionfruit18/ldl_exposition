@@ -7,6 +7,15 @@ Investigate transition system modelling languages? Maybe a side-quest. First sat
 
 Notes:
 
+Stuff to maintain project:
+
 To generate documentation:
 cabal configure
 cabal haddock --hyperlink-source
+
+git status
+git add
+git commit -m
+git push
+
+dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
