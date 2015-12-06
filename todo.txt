@@ -1,0 +1,12 @@
+TODO:
+
+Parser.hs – write a parser for LDL for easy input of formulae
+DisplayAut.hs – find something for displaying automata as graphs
+DisplayFormula.hs – find something for displaying formulae in a nice font
+Investigate transition system modelling languages? Maybe a side-quest. First satisfiability, then model checking.
+
+Notes:
+
+To generate documentation:
+cabal configure
+cabal haddock --hyperlink-source
