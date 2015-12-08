@@ -2,7 +2,7 @@
 {-# LANGUAGE MonadComprehensions #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
-module GraphDrawing (Drawable, DrawableWithName, Named, output, callDot) where
+module GraphDrawingIO (DrawableIO, DrawableWithNameIO, NamedIO, outputIO, callDotIO) where
 
 import Automata
 import Samples
@@ -11,22 +11,25 @@ import Data.Set.Monad as S
 import Data.Map as M
 import System.Process (callCommand)
 import System.IO (hClose, hPutStrLn)
+import Control.Monad
 
 
 -- * Drawable and related classes
-class Drawable a where
-	draw :: a -> [String] -- ^ lines of the .gv description of the graph
-	drawWithGraphName :: String -> a -> [String]
-	drawWithGraphName name g = ["Digraph " ++ name ++ " {"] ++  (draw g) ++ ["}"]
+class DrawableIO a where
+	drawIO :: a -> IO [String] -- ^ lines of the .gv description of the graph
+	drawWithGraphNameIO :: String -> a -> IO [String]
+	drawWithGraphNameIO name g = do
+		d <- drawIO g
+		return (["Digraph " ++ name ++ " {"] ++ d ++ ["}"])
 
-data Named a = Named String a -- I will need to label nodes in the formula graph
+data NamedIO a = NamedIO String a -- I will need to label nodes in the formula graph
 -- to differentiate them from others.
 
-class DrawableWithName a where
-	drawWithName :: a -> String -> [String]
+class DrawableWithNameIO a where
+	drawWithNameIO :: a -> String -> IO [String]
 
-instance (DrawableWithName a) => Drawable (Named a) where
-	draw (Named name x) = drawWithName x name
+instance (DrawableWithNameIO a) => DrawableIO (NamedIO a) where
+	drawIO (NamedIO name x) = drawWithNameIO x name
 
 -- * Convenience functions 
 label :: String -> String
@@ -53,58 +56,60 @@ x +-+ y = x ++ " " ++ y
 -- Prints every part of the graph specified by
 -- the transition function and final state set and start state.
 -- So make sure it's reachable first!
-instance (Show q, Show a, Ord q, Ord a) => Drawable (DFA q a) where
-	draw (FA as qs q (DTransition dt) fs) =
+instance (Show q, Show a, Ord q, Ord a) => DrawableIO (DFA q a) where
+	drawIO (FA as qs q (DTransition dt) fs) =
+		return (
 		["init -> " ++ show q] ++
 		["init  [shape=polygon,style=bold,sides=6,color=lightblue]"] ++
 		[labelTransition (show q) (show q') (show a)
 			| a <- S.toList as, q <- S.toList qs, Just q' <- [M.lookup (q,a) dt]] ++
-		[show q ++ "[peripheries=2, color=green]" | q <- S.toList fs]
+		[show q ++ "[peripheries=2, color=green]" | q <- S.toList fs])
 
 -- | Draw AFAs.
-instance (Show q, Show a, Ord q, Ord a) => Drawable (AFA q a) where
-	draw (FA as qs q (ATransition at) fs) =
-		["init -> " ++ show q] ++
-		["init  [shape=polygon,style=bold,sides=6,color=lightblue]"] ++
-		draw at ++ -- draw the transitions, which are quite involved since they have boolean formulas
-		[show q ++ "[peripheries=2, color=green]" | q <- S.toList fs]
+instance (Show q, Show a, Ord q, Ord a) => DrawableIO (AFA q a) where
+	drawIO (FA as qs q (ATransition at) fs) = 
+		do
+			d <- drawIO at
+			return(["init -> " ++ show q] ++
+					["init  [shape=polygon,style=bold,sides=6,color=lightblue]"] ++
+					d ++ -- draw the transitions, which are quite involved since they have boolean formulas
+					[show q ++ "[peripheries=2, color=green]" | q <- S.toList fs])
 
 
 
 -- | Drawing boolean formulas from transition table
-instance (Show q, Show a, Ord q, Ord a) => Drawable (M.Map (q, a) (BasicPropLogic q)) where
-	draw at =
-		concat [ case log of
-			PropVar q' -> [labelTransition (show q) (show q') (show a)]
+instance (Show q, Show a, Ord q, Ord a) => DrawableIO (M.Map (q, a) (BasicPropLogic q)) where
+	drawIO at = liftM concat $
+		sequence [ case log of
+			PropVar q' ->
+				(do putStrLn (show log); return [labelTransition (show q) (show q') (show a)])
 			PropConst b -> let bname = name ++ show b
-							in [drawTransition (show q) bname,
+							in return [drawTransition (show q) bname,
 								bname +-+ label (show b)]	
-			log' -> draw (Named name log') ++ [labelTransition (show q) name (show a)]
+			log -> (do
+				d <- drawIO (NamedIO name log)
+				return (d ++ [labelTransition (show q) name (show a)]))
 			| (q,a) <- M.keys at, let log = at M.! (q,a), let name = boolform q a]
 
 -- * Instance for DrawableWithName
 
 -- | Lets me draw a graph of a boolean formula, named to distinguish it from other graphs
-instance Show q => DrawableWithName (BasicPropLogic q) where
-	-- drawWithName :: BasicPropLogic -> String -> [String]
+instance Show q => DrawableWithNameIO (BasicPropLogic q) where
+	-- drawWithName :: BasicPropLogic -> String -> IO [String]
 	-- in other words, drawWithName log is a 'continuation' that 'draws'
 	-- the logical formula when given the name.
 	-- the arguments to the foldLog's recursive operators (arr, orr etc.)
 	-- are precisely these continuations.
-	drawWithName = foldLog cr pr nr arr orr ur br where
+	drawWithNameIO = foldLog cr pr nr arr orr ur br where
 		cr b = -- PropConst
 			(\name ->
 				let bname = name ++ show b
-				in [name +-+ label (show b)])
+				in return [name +-+ label (show b)])
 		pr q = -- PropVar
 			(\name ->
-				[name +-+ label (show q)]-- ok, so there's a problem here, in that
+				return [name +-+ label (show q)]-- ok, so there's a problem here, in that
 				-- we will create separate nodes labelled with the same state, with different
-				-- names. I think it would be better, if A -> B, that
-				-- A passes B A's name, and relies on B to print its own stuff,
-				-- rather than A printing its own stuff (which includes giving B a name)
-				-- and then giving B that name.
-				-- so pass forward rather than pass backward.
+				-- names.
 				)
 		nr drawCont = -- Not f
 			error "Negation in what is meant to be positive boolean formula"
@@ -115,14 +120,18 @@ instance Show q => DrawableWithName (BasicPropLogic q) where
 
 
 -- | helper for drawWithName (BasicPropLogic q)
-binopLabel :: String -> (String -> [String]) -> (String -> [String]) -> (String -> [String])
+binopLabel :: String -> (String -> IO [String]) -> (String -> IO [String]) -> (String -> IO [String])
 binopLabel op dc1 dc2 =
 	(\name ->
-		let nextName1 = name ++ op ++ "1";
-			nextName2 = name ++ op ++ "2"
-		in [drawTransition name nextName1,
-			drawTransition name nextName2,
-			name +-+ label op] ++ dc1 nextName1 ++ dc2 nextName2
+		do
+			putStrLn (op +-+ name)
+			let nextName1 = name ++ op ++ "1"
+			let	nextName2 = name ++ op ++ "2"
+			d1 <- dc1 nextName1
+			d2 <- dc2 nextName2
+			return ([drawTransition name nextName1,
+				drawTransition name nextName2,
+				name +-+ label op] ++ d1 ++ d2)
 	)
 
 {-
@@ -161,17 +170,17 @@ data PropLogic p u b =
 -- * For use in the interpreter
 
 -- | Output drawable object to file
-output :: Drawable a => a -> IO ()
-output g = do
+outputIO :: DrawableIO a => a -> IO ()
+outputIO g = do
 	putStrLn "Name of graph:"
 	name <- getLine
-	let lines = drawWithGraphName name g
+	lines <- drawWithGraphNameIO name g
 	appendFile "GraphDrawingOutput.gv" "\n"
 	mapM_ (\l -> appendFile "GraphDrawingOutput.gv" (l++"\n")) lines
 
-callDot :: Drawable a => a -> IO ()
-callDot g =
+callDotIO :: DrawableIO a => a -> IO ()
+callDotIO g =
 	do
-		output g
+		outputIO g
 		callCommand "dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf"
 		putStrLn "Done!"

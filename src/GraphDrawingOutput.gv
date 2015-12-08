@@ -93,3 +93,61 @@ init  [shape=polygon,style=bold,sides=6,color=lightblue]
 2[peripheries=2, color=green]
 3[peripheries=2, color=green]
 }
+
+Digraph afa1 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+boolform1a [label="False"]
+}
+
+Digraph afa2 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+boolform1a [label="False"]
+}
+
+Digraph afa3 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+boolform1a [label="False"]
+}
+
+Digraph afa4 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+boolform1a [label="False"]
+}
+
+Digraph afa5 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+1 -> boolform1aFalse
+boolform1aFalse [label="False"]
+}
+
+Digraph afa6 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+1 -> boolform1aFalse
+boolform1aFalse [label="False"]
+}
+
+Digraph afa11 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+boolform1a -> boolform1aAnd1
+boolform1a -> boolform1aAnd2
+boolform1a [label="And"]
+boolform1aAnd1 -> boolform1aAnd1Or1
+boolform1aAnd1 -> boolform1aAnd1Or2
+boolform1aAnd1 [label="Or"]
+boolform1aAnd1Or1 [label="3"]
+boolform1aAnd1Or2 [label="2"]
+boolform1aAnd2 -> boolform1aAnd2Or1
+boolform1aAnd2 -> boolform1aAnd2Or2
+boolform1aAnd2 [label="Or"]
+boolform1aAnd2Or1 [label="4"]
+boolform1aAnd2Or2 [label="5"]
+1 -> boolform1a[label="a"]
+3[peripheries=2, color=green]
+}

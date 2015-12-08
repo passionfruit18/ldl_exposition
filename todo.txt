@@ -19,3 +19,8 @@ git commit -m
 git push
 
 dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
+
+Automata:
+
+Make versions of translations with reachability.
+A more general view: Automata are things which can be *queried* what is the initial state, is this a final state, what is the transition on this etc. What I have now, where these items are explicitly stored, is just one implementation of that. More generally, those things could be ready to be computed but not actually computed. i.e. lazy. Algorithms which work on automata, use them to search a state space (including translations between automata themselves). Translated automata then just do compositions of these queries. Of course, they could be 'realised' into actual state...

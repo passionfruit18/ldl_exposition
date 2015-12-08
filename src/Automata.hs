@@ -10,13 +10,13 @@ import Logic
 -- * Types of Automata
 
 newtype DTransition q a = 
-    DTransition (M.Map (q, a) q)
+    DTransition (M.Map (q, a) q) deriving Show
 newtype NTransitionE q a =
-    NTransitionE (M.Map (q, (Maybe a)) (S.Set q)) -- ^ with epsilon-transitions
+    NTransitionE (M.Map (q, (Maybe a)) (S.Set q)) deriving Show -- ^ with epsilon-transitions
 newtype NTransition q a =
-    NTransition (M.Map (q, a) (S.Set q))
+    NTransition (M.Map (q, a) (S.Set q)) deriving Show
 newtype ATransition q a =
-    ATransition (M.Map (q, a) (BasicPropLogic q)) -- ^ should be positive boolean formula. Todo: write function to enforce this.
+    ATransition (M.Map (q, a) (BasicPropLogic q)) deriving Show -- ^ should be positive boolean formula. Todo: write function to enforce this.
 
 -- | the general type of a finite automaton.
 data FA q a t = FA {alphabet :: S.Set a, 
