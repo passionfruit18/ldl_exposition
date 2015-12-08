@@ -10,16 +10,19 @@ import Automata
 flattenFA :: FA q a t -> FA Int a t -- flatten states into integers
 flattenFA = error "Not implemented yet"
 
-flattenDFA :: (Ord a, Ord q) => DFA q a -> DFA Int a
+flattenDFA :: forall q a. (Ord a, Ord q) => DFA q a -> DFA Int a
 flattenDFA (FA as qs q1 (DTransition dt) fs) =
     (FA as qs2 q2 (DTransition dt2) fs2) where
+    listqs :: [q]
     listqs = S.toList qs
-    index q = length $ takeWhile (/= q) listqs -- the flattened state
+    idx :: q -> Int
+    idx q = length $ takeWhile (/= q) listqs -- the flattened state
 
     qs2 = S.fromList [0..(length listqs) - 1]
-    q2 = index q1
-    dt2 = M.fromList $ S.toList [((q, a), index (dt M.! (q,a))) | q <- qs2, a <- as]
-    fs2 = S.map index fs
+    q2 = idx q1
+    dt2 :: M.Map (Int, a) Int
+    dt2 = M.fromList $ S.toList [((idx q, a), idx (dt M.! (q,a))) | q <- qs2, a <- as]
+    fs2 = S.map idx fs
 
 
 -- | A rather cute algorithm for minimising DFAs that reverses them twice.
@@ -41,8 +44,8 @@ dReverse (FA as qs q1 (DTransition dt) fs) =
                 else process (nextReached,
                             M.union currentTransition
                                     (reach (S.difference nextReached currentReached)))
-        reach qss = M.fromList [((sub, a), pre sub dt a) | sub <- qss, a <- as ]
+        reach qss = M.fromList $ S.toList [((sub, a), pre sub dt a) | sub <- qss, a <- as ]
         -- pre: states which transition into s via t on a.
         pre s t a = S.fromList [q | (q, a2) <- M.keys t, a == a2, S.member (t M.! (q, a)) s]
-        fs2 = S.fromList [sub | sub <- qs2, S.member q1 sub]
+        fs2 = [sub | sub <- qs2, S.member q1 sub]
 
