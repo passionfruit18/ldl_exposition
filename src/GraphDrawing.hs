@@ -98,7 +98,8 @@ instance Show q => DrawableWithName (BasicPropLogic q) where
 				in [name +-+ label (show b)])
 		pr q = -- PropVar
 			(\name ->
-				[name +-+ label (show q)]-- ok, so there's a problem here, in that
+				[name +-+ label (show q)]
+				-- ok, so there's a problem here, in that
 				-- we will create separate nodes labelled with the same state, with different
 				-- names. I think it would be better, if A -> B, that
 				-- A passes B A's name, and relies on B to print its own stuff,

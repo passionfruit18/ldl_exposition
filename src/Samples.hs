@@ -38,7 +38,7 @@ dfa1 = FA as qs 1 (DTransition t) (S.fromList [2,3]) where
 					((1,L 'b'), 1),
 					((1,L 'a'), 3)]
 
-dfa2 = reach $ n2d $ a2n afa2
+dfa2 = reach $ n2d $ a2n afa2 -- This doesn't work! Probably because the translation is a bit too naive.
 
 
 -- | The reachable part of the subset construction on the reversal of a DFA.

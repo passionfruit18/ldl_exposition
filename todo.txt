@@ -1,13 +1,6 @@
-TODO:
+*****   Notes   *****
 
-Parser.hs – write a parser for LDL for easy input of formulae
-DisplayAut.hs – find something for displaying automata as graphs
-DisplayFormula.hs – find something for displaying formulae in a nice font
-Investigate transition system modelling languages? Maybe a side-quest. First satisfiability, then model checking.
-
-Notes:
-
-Stuff to maintain project:
+***Stuff to maintain project:***
 
 To generate documentation:
 cabal configure
@@ -20,7 +13,37 @@ git push
 
 dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
 
-Automata:
+*****   Todo   *****
+ 
+*** Automata ***
 
-Make versions of translations with reachability.
-A more general view: Automata are things which can be *queried* what is the initial state, is this a final state, what is the transition on this etc. What I have now, where these items are explicitly stored, is just one implementation of that. More generally, those things could be ready to be computed but not actually computed. i.e. lazy. Algorithms which work on automata, use them to search a state space (including translations between automata themselves). Translated automata then just do compositions of these queries. Of course, they could be 'realised' into actual state...
+> Make versions of translations with reachability.
+
+d2n = d2nNaive
+d2n = d2nReachable
+
+> A more general view: Automata are things which can be *queried*.
+What is the initial state, is this a final state, what is the transition on this etc.What I have now, where these items are explicitly stored, is just one implementation of that. More generally, those things could be ready to be computed but not actually computed. i.e. lazy. Algorithms which work on automata, use them to search a state space (including translations between automata themselves). Translated automata then just do compositions of these queries. Of course, they could be 'realised' into actual state...
+
+Something like this:
+
+class (FAquery q a r) m where
+
+	alpha :: 	  		a -> m -> Bool
+	state :: 			q -> m -> Bool
+	init :: 				 m -> q
+	transition ::  q -> a -> m -> r
+	final :: 			q -> m -> Bool
+
+a2n :: ((FAquery q a (BasicPropLogic q) m), (FAquery q a (S.Set q) n)) => m -> n
+a2n afa =
+	blah blah blah
+
+
+*** Graph Drawing ***
+
+Make 'pass forward my name' rather than 'request backward for my name'
+
+*** Logic & Dependents ***
+
+Change Prog to Reg

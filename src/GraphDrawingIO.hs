@@ -1,4 +1,5 @@
 -- | For drawing graphs using GraphViz's dot language
+-- | IO version for debugging
 {-# LANGUAGE MonadComprehensions #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
