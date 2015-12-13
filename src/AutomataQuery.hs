@@ -1,49 +1,67 @@
 {-# LANGUAGE MonadComprehensions #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 -- allows the use of list comprehension notation for monads, in particular sets
 
-module Automata where
+module AutomataQuery where
 import qualified Data.Set.Monad as S -- Monadic Set
 import qualified Data.Map as M
 import Logic
 
 -- * Types of Automata
 
-newtype DTransition q a = 
-    DTransition (M.Map (q, a) q) deriving Show
--- |with epsilon-transitions
-newtype NTransitionE q a =
-    NTransitionE (M.Map (q, (Maybe a)) (S.Set q)) deriving Show
+type Transition q a r = M.Map (q,a) r
 
-newtype NTransition q a =
-    NTransition (M.Map (q, a) (S.Set q)) deriving Show
--- |should be positive boolean formula. Todo: write function to enforce this.
-newtype ATransition q a =
-    ATransition (M.Map (q, a) (BasicPropLogic q)) deriving Show 
-    
--- | the general type of a finite automaton.
-data FA q a t = FA {alphabet :: S.Set a, 
+-- | the general type of a realised finite automaton.
+data FA q a r = FA {alphabet :: S.Set a, 
                     states :: S.Set q,
                     init :: q,             -- ^ just one starting state.
-                    transition :: t q a,
+                    transition :: Transition q a r,
                     final :: S.Set q} deriving Show
 
 -- state set and alphabet implicit in transition map-- do the explicit ones match with the implicit ones?
 -- That is are all key-value pairs defined for keys in alphabet X states? Not guaranteed.
 
-type DFA q a = FA q a DTransition
-type NFAE q a = FA q a NTransitionE -- ^ NFAE with alphabet "as" has transition function from (as + epsilon) x states -> ...
-type NFA q a = FA q a NTransition
-type AFA q a = FA q a ATransition
+newtype DFA q a = DFA (FA q a q)
+newtype NFAE q a = NFAE (FA q (Maybe a) (S.Set q)) -- ^ NFAE with alphabet "as" has transition function from (as + epsilon) x states -> ...
+newtype NFA q a = NFA (FA q a (S.Set q))
+newtype AFA q a = AFA (FA q a (BasicPropLogic q))
 isFinal :: Ord q => q -> S.Set q -> Bool
 isFinal = S.member
+
+-- * Query-Automata
+
+class (FAquery q a r) m where
+    alphaQ :: a -> m -> Bool
+    stateQ :: q -> m -> Bool
+    initQ :: m -> q
+    transitionQ :: q -> a -> m -> (Maybe r)
+    finalQ :: q -> m -> Bool
+
+instance (FAquery q a r) (FA q a r) where
+    alphaQ a fa = S.member a (alphabet fa)
+    stateQ q fa = S.member q (states fa)
+    initQ fa = (init fa)
+    transitionQ q a fa = M.lookup (q,a) (transition fa)
+    finalQ q fa = S.member q (final fa)
+
+
+realise :: (FAquery q a r) m =>
+        m -> (S.Set a) -> (Transition q a r -> S.Set q)
+        -> (FA q a r)
+realise m as elemsReached = FA as qs q0 t fs where
+    q0 = initQ m
+    (qs, t) = reach (S.singleton q0) postMap elemsReached
+    postMap sub = M.fromList $ S.toList [((q, a), r) | q <- sub, a <- as, (Just r) <- transitionQ q a m]-- what as
+    fs = S.filter (flip finalQ m) qs
+
 
 -- * Easy Translations (into more succint automata)
 
 d2nE :: (Eq a, Ord q) =>
         DFA q a -> NFAE q a
-d2nE (FA as qs q (DTransition dt) fs) = 
-      (FA as qs q (NTransitionE ntE) fs) where
+d2nE (DFA (FA as qs q (Transition dt) fs)) = 
+      (NFAE (FA (S.map Just as) qs q (Transition ntE) fs)) where
     ntE = (M.fromAscList .
         map (\((q1, a), q2) -> ((q1, Just a), S.singleton q2)) . -- this function must preserve asc
         -- asc being the property of ascending by key.
@@ -51,14 +69,14 @@ d2nE (FA as qs q (DTransition dt) fs) =
 
 d2n :: Ord q =>
         DFA q a -> NFA q a
-d2n (FA as qs q (DTransition dt) fs) =
-    FA as qs q (NTransition nt) fs where
+d2n (DFA (FA as qs q (DTransition dt) fs)) =
+    (NFA (FA as qs q (NTransition nt) fs) where
         nt = (M.map (\q -> S.singleton q) dt)
 
 n2a :: (Eq a, Ord q) =>
         NFA q a -> AFA q a
-n2a (FA as qs q (NTransition nt) fs) =
-    FA as qs q (ATransition at) fs where
+n2a (NFA (FA as qs q (NTransition nt) fs)) =
+    (AFA (FA as qs q (ATransition at) fs) where
     at = (M.fromAscList .
             map (\((q1, a), setQ) -> ((q1, a), bigOr setQ)) . -- must preserve asc
             M.assocs) nt
@@ -76,8 +94,12 @@ nE2n = error "Not implemented yet!"
 
 n2d :: (Ord a, Ord q) =>
         NFA q a -> DFA (S.Set q) a
-n2d (FA as qs1 q1 (NTransition nt) fs1) =
-    FA as qs2 q2 (DTransition dt) fs2 where
+n2d = n2dNaive
+
+n2dNaive :: (Ord a, Ord q) =>
+        NFA q a -> DFA (S.Set q) a
+n2dNaive (NFA (FA as qs1 q1 (NTransition nt) fs1)) =
+    DFA (FA as qs2 q2 (DTransition dt) fs2) where
     q2 = S.singleton q1
     qs2 = subsets qs1 -- subset construction
     dt = M.fromList $ S.toList $ -- convert set to list to map
@@ -92,7 +114,30 @@ post :: (Ord a, Ord q) =>
 -- ^ states reachable from set s according to t, via action a
 post s t a = s >>= \q -> t M.! (q,a)
 
+n2dReach :: (Ord a, Ord q) =>
+        NFA q a -> DFA (S.Set q) a
+n2dReach (NFA (FA as qs1 q1 (Transition nt) fs1)) =
+    DFA (FA as qs2 q2 (Transition dt) fs2) where
+        q2 = S.singleton q1
+        (qs2, dt) = reach (S.singleton q2) postMap elemsReached
+        postMap qs =
+            M.fromList $ S.toList
+            [((sub, a), sub >>= \q -> nt M.! (q,a)) | sub <- qs, a <- as]
+        elemsReached t = S.fromList (M.elems t)
 
+
+reach :: (Eq q) => S.Set q ->
+            (S.Set q -> Transition q a r) ->
+            (Transition q a r-> S.Set q) -> 
+            (S.Set q, Transition q a r)
+reach s0 postMap elemsReached = reach' (s0, postMap s0) where
+    reach' (currentReached, currentTransition) =
+        let nextReached = elemsReached currentTransition in
+        if currentReached == nextReached
+            then (currentReached, currentTransition)
+            else reach (nextReached,
+                        M.union currentTransition
+                                (postMap (S.difference nextReached currentReached)))
 
 subsets :: Ord a =>
             S.Set a -> S.Set (S.Set a)

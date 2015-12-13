@@ -1,5 +1,5 @@
 -- based on Mike Spivey's FunParser from the POPL course
-module LDLParser(ldlParser, progParser, lexer, LDLogic_, Prog_, BasicPropLogic_) where
+module LDLParser(ldlParser, regParser, lexer, LDLogic_, Reg_, BasicPropLogic_) where
 import Parsing
 import Logic -- this is the abstract syntax which we want to parse into.
 import Data.Char
@@ -8,7 +8,7 @@ import Data.Char
 
 type Proposition = String
 type LDLogic_ = LDLogic Proposition
-type Prog_ = Prog Proposition
+type Reg_ = Reg Proposition
 type BasicPropLogic_ = BasicPropLogic Proposition
 
 data Token = 
@@ -22,7 +22,7 @@ data Token =
 
 
 data IdKind =
-	MONLOGOP | LOGOP | PROGOP | POSTPROGOP deriving (Eq, Show)
+	MONLOGOP | LOGOP | REGOP | POSTREGOP deriving (Eq, Show)
 	-- not sure if I'll need this.
 
 kwlookup = make_kwlookup PROP [("true", CONST True), ("false", CONST False)]
@@ -83,8 +83,8 @@ dnf p = p_disj where
 
 p_ldlTerm1 = -- chain of unary operators !f, <>f, []f.
 	do eat NOT; f <- p_ldlTerm1; return (Not f)
-	<+> do eat LTRI; r <- p_prog; eat RTRI; f <- p_ldlTerm1; return (Unary r f)
-	<+> do eat BRA; r <- p_prog; eat KET; f <- p_ldlTerm1; return (Not (Unary r (Not f)))
+	<+> do eat LTRI; r <- p_reg; eat RTRI; f <- p_ldlTerm1; return (Unary r f)
+	<+> do eat BRA; r <- p_reg; eat KET; f <- p_ldlTerm1; return (Not (Unary r (Not f)))
 	<+> p_ldlPrimary
 
 p_ldlPrimary = -- a proposition, or, recursively, a formula in parentheses.
@@ -96,22 +96,22 @@ p_ldlPrimary = -- a proposition, or, recursively, a formula in parentheses.
 			_ -> p_fail
 	<+> do eat LPAR; f <- p_ldlFormula; eat RPAR; return f
 
-p_prog :: Parser Token Prog_
-p_prog = p_disj where
+p_reg :: Parser Token Reg_
+p_reg = p_disj where
 	p_disj = p_chainr (\PLUS -> Plus) (eat PLUS) p_conj
-	p_conj = p_chainr (\SEMI -> Comp) (eat SEMI) p_progTerm1
+	p_conj = p_chainr (\SEMI -> Comp) (eat SEMI) p_regTerm1
 
-p_progTerm1 =
-	do r <- p_progPrimary; f r where
+p_regTerm1 =
+	do r <- p_regPrimary; f r where
 		f r =
 			do
 				eat STAR; r2 <- f r; return (Star r2)
 			<+> return r
 
-p_progPrimary = 
+p_regPrimary = 
 	do f <- p_ldlFormula; eat TEST; return (Test f)
 	<+> do bf <- p_basicFormula; return (Base bf)
-	<+> do eat LPAR; r <- p_prog; eat RPAR; return r
+	<+> do eat LPAR; r <- p_reg; eat RPAR; return r
 
 p_basicFormula :: Parser Token (BasicPropLogic Proposition)
 p_basicFormula = dnf p_basicTerm1
@@ -133,7 +133,7 @@ p_basicPrimary =
 ldlParser :: Syntax Token LDLogic_
 ldlParser = (lexer, p_ldlFormula)
 
-progParser :: Syntax Token Prog_
-progParser = (lexer, p_prog)
+regParser :: Syntax Token Reg_
+regParser = (lexer, p_reg)
 
 

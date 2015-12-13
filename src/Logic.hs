@@ -70,21 +70,21 @@ data UnaryLTL = Next
 data BinaryLTL = Until
 type LTLogic p = PropLogic p UnaryLTL BinaryLTL
 
-type LDLogic p = PropLogic p (Prog p) Void
-data Prog p =
+type LDLogic p = PropLogic p (Reg p) Void
+data Reg p =
   Base (BasicPropLogic p) |
   Test (LDLogic p) |
-  Plus (Prog p) (Prog p) |
-  Comp (Prog p) (Prog p) |
-  Star (Prog p)
+  Plus (Reg p) (Reg p) |
+  Comp (Reg p) (Reg p) |
+  Star (Reg p)
 
-deriving instance Show p => Show (Prog p)
-foldProg :: (BasicPropLogic p -> r) ->
+deriving instance Show p => Show (Reg p)
+foldReg :: (BasicPropLogic p -> r) ->
 			  (LDLogic p -> r) ->
 			  (r -> r -> r) ->
 			  (r -> r -> r) ->
-			  (r -> r) -> Prog p -> r
-foldProg basic ldl prr crr sr prog = f prog where
+			  (r -> r) -> Reg p -> r
+foldReg basic ldl prr crr sr reg = f reg where
 	f (Base b) = basic b
 	f (Test f) = ldl f
 	f (Plus p1 p2) = prr (f p1) (f p2)
@@ -92,23 +92,23 @@ foldProg basic ldl prr crr sr prog = f prog where
 	f (Star p) = sr (f p)
 	
 
-trueProg :: Prog p
-trueProg = Base $ PropConst $ True
+trueReg :: Reg p
+trueReg = Base $ PropConst $ True
 {-|
 "diamond p" is a unary modality that transforms LDL formulae.
 e.g. <true> f where f is an LDL formula, is diamond true f.
 square is its dual.
 -}
-diamond :: Prog p -> LDLogic p -> LDLogic p
+diamond :: Reg p -> LDLogic p -> LDLogic p
 diamond = Unary
-square :: Prog p -> LDLogic p -> LDLogic p
-square prog l = Not $ diamond prog $ Not l
+square :: Reg p -> LDLogic p -> LDLogic p
+square reg l = Not $ diamond reg $ Not l
 
 
 ltl2ldl :: LTLogic p -> LDLogic p
 ltl2ldl = foldLog PropConst PropVar Not And Or u b where
-    u Next ld = diamond trueProg ld
-    b Until ld1 ld2 = diamond (Star (Comp (Test ld1) trueProg)) ld2
+    u Next ld = diamond trueReg ld
+    b Until ld1 ld2 = diamond (Star (Comp (Test ld1) trueReg)) ld2
 
 {-
 To translate LDL to AFAs, we will need negation normal-form (nnf) LDL.

@@ -151,3 +151,235 @@ boolform1aAnd2Or2 [label="5"]
 1 -> boolform1a[label="a"]
 3[peripheries=2, color=green]
 }
+
+
+Digraph afa41 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1And[label="a"]
+State1And [label="And"]
+State1And -> State1AndOrLeft
+State1AndOrLeft [label="Or"]
+State1AndOrLeft -> State3
+State1AndOrLeft -> State2
+State1And -> State1AndOrRight
+State1AndOrRight [label="Or"]
+State1AndOrRight -> State4
+State1AndOrRight -> State5
+State3[peripheries=2, color=green]
+}
+
+Digraph afa42 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1And[label="a"]
+State1And [label="And"]
+State1And -> State1AndOrLeft
+State1AndOrLeft [label="Or"]
+State1AndOrLeft -> State3
+State1AndOrLeft -> State2
+State1And -> State1AndOrRight
+State1AndOrRight [label="Or"]
+State1AndOrRight -> State4
+State1AndOrRight -> State5
+State1 -> State1And[label="b"]
+State1And [label="And"]
+State1And -> State1AndOrLeft
+State1AndOrLeft [label="Or"]
+State1AndOrLeft -> State2
+State1AndOrLeft -> State1AndOrLeftTrueRight
+State1AndOrLeftTrueRight [label="True"]
+State1And -> State1AndOrRight
+State1AndOrRight [label="Or"]
+State1AndOrRight -> State1AndOrRightTrueLeft
+State1AndOrRightTrueLeft [label="True"]
+State1AndOrRight -> State1AndOrRightTrueRight
+State1AndOrRightTrueRight [label="True"]
+State3[peripheries=2, color=green]
+}
+
+Digraph afa43 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1AndOna[label="a"]
+State1AndOna [label="And"]
+State1AndOna -> State1AndOnaOrLeft
+State1AndOnaOrLeft [label="Or"]
+State1AndOnaOrLeft -> State3
+State1AndOnaOrLeft -> State2
+State1AndOna -> State1AndOnaOrRight
+State1AndOnaOrRight [label="Or"]
+State1AndOnaOrRight -> State4
+State1AndOnaOrRight -> State5
+State1 -> State1AndOnb[label="b"]
+State1AndOnb [label="And"]
+State1AndOnb -> State1AndOnbOrLeft
+State1AndOnbOrLeft [label="Or"]
+State1AndOnbOrLeft -> State2
+State1AndOnbOrLeft -> State1AndOnbOrLeftTrueRight
+State1AndOnbOrLeftTrueRight [label="True"]
+State1AndOnb -> State1AndOnbOrRight
+State1AndOnbOrRight [label="Or"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueLeft
+State1AndOnbOrRightTrueLeft [label="True"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueRight
+State1AndOnbOrRightTrueRight [label="True"]
+State3[peripheries=2, color=green]
+}
+
+Digraph afa44 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1AndOna[label="a"]
+State1AndOna [label="And"]
+State1AndOna -> State1AndOnaOrLeft
+State1AndOnaOrLeft [label="Or"]
+State1AndOnaOrLeft -> State3
+State1AndOnaOrLeft -> State2
+State1AndOna -> State1AndOnaOrRight
+State1AndOnaOrRight [label="Or"]
+State1AndOnaOrRight -> State4
+State1AndOnaOrRight -> State5
+State3 [peripheries=2, color=green]
+State1 [label="1"]
+}
+
+Digraph afa45 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1AndOna[label="a"]
+State1AndOna [label="And"]
+State1AndOna -> State1AndOnaOrLeft
+State1AndOnaOrLeft [label="Or"]
+State1AndOnaOrLeft -> State3
+State1AndOnaOrLeft -> State2
+State1AndOna -> State1AndOnaOrRight
+State1AndOnaOrRight [label="Or"]
+State1AndOnaOrRight -> State4
+State1AndOnaOrRight -> State5
+State1 -> State1AndOnb[label="b"]
+State1AndOnb [label="And"]
+State1AndOnb -> State1AndOnbOrLeft
+State1AndOnbOrLeft [label="Or"]
+State1AndOnbOrLeft -> State2
+State1AndOnbOrLeft -> State1AndOnbOrLeftTrueRight
+State1AndOnbOrLeftTrueRight [label="True"]
+State1AndOnb -> State1AndOnbOrRight
+State1AndOnbOrRight [label="Or"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueLeft
+State1AndOnbOrRightTrueLeft [label="True"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueRight
+State1AndOnbOrRightTrueRight [label="True"]
+State3 [peripheries=2, color=green]
+State1 [label="1"]
+State1 [label="1"]
+}
+
+Digraph afa46 {
+State1 [label="1"]
+State1 [label="1"]
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1AndOna[label="a"]
+State1AndOna [label="And"]
+State1AndOna -> State1AndOnaOrLeft
+State1AndOnaOrLeft [label="Or"]
+State1AndOnaOrLeft -> State3
+State1AndOnaOrLeft -> State2
+State1AndOna -> State1AndOnaOrRight
+State1AndOnaOrRight [label="Or"]
+State1AndOnaOrRight -> State4
+State1AndOnaOrRight -> State5
+State1 -> State1AndOnb[label="b"]
+State1AndOnb [label="And"]
+State1AndOnb -> State1AndOnbOrLeft
+State1AndOnbOrLeft [label="Or"]
+State1AndOnbOrLeft -> State2
+State1AndOnbOrLeft -> State1AndOnbOrLeftTrueRight
+State1AndOnbOrLeftTrueRight [label="True"]
+State1AndOnb -> State1AndOnbOrRight
+State1AndOnbOrRight [label="Or"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueLeft
+State1AndOnbOrRightTrueLeft [label="True"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueRight
+State1AndOnbOrRightTrueRight [label="True"]
+State3 [peripheries=2, color=green]
+}
+
+Digraph afa47 {
+State1 [label="1"]
+State2 [label="2"]
+State3 [label="3"]
+State4 [label="4"]
+State5 [label="5"]
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1AndOna[label="a"]
+State1AndOna [label="And"]
+State1AndOna -> State1AndOnaOrLeft
+State1AndOnaOrLeft [label="Or"]
+State1AndOnaOrLeft -> State3
+State1AndOnaOrLeft -> State2
+State1AndOna -> State1AndOnaOrRight
+State1AndOnaOrRight [label="Or"]
+State1AndOnaOrRight -> State4
+State1AndOnaOrRight -> State5
+State1 -> State1AndOnb[label="b"]
+State1AndOnb [label="And"]
+State1AndOnb -> State1AndOnbOrLeft
+State1AndOnbOrLeft [label="Or"]
+State1AndOnbOrLeft -> State2
+State1AndOnbOrLeft -> State1AndOnbOrLeftTrueRight
+State1AndOnbOrLeftTrueRight [label="True"]
+State1AndOnb -> State1AndOnbOrRight
+State1AndOnbOrRight [label="Or"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueLeft
+State1AndOnbOrRightTrueLeft [label="True"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueRight
+State1AndOnbOrRightTrueRight [label="True"]
+State3 [peripheries=2, color=green]
+}
+
+Digraph afa458 {
+State1 [label="1"]
+State2 [label="2"]
+State3 [label="3"]
+State4 [label="4"]
+State5 [label="5"]
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1AndOna[label="a"]
+State1AndOna [label="And"]
+State1AndOna -> State1AndOnaOrLeft
+State1AndOnaOrLeft [label="Or"]
+State1AndOnaOrLeft -> State3
+State1AndOnaOrLeft -> State2
+State1AndOna -> State1AndOnaOrRight
+State1AndOnaOrRight [label="Or"]
+State1AndOnaOrRight -> State4
+State1AndOnaOrRight -> State5
+State1 -> State1AndOnb[label="b"]
+State1AndOnb [label="And"]
+State1AndOnb -> State1AndOnbOrLeft
+State1AndOnbOrLeft [label="Or"]
+State1AndOnbOrLeft -> State2
+State1AndOnbOrLeft -> State1AndOnbOrLeftTrueRight
+State1AndOnbOrLeftTrueRight [label="True"]
+State1AndOnb -> State1AndOnbOrRight
+State1AndOnbOrRight [label="Or"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueLeft
+State1AndOnbOrRightTrueLeft [label="True"]
+State1AndOnbOrRight -> State1AndOnbOrRightTrueRight
+State1AndOnbOrRightTrueRight [label="True"]
+State2 -> State2AndOna[label="a"]
+State2AndOna [label="And"]
+State2AndOna -> State2AndOnaOrLeft
+State2AndOnaOrLeft [label="Or"]
+State2AndOnaOrLeft -> State3
+State2AndOnaOrLeft -> State4
+State2AndOna -> State2AndOnaOrRight
+State2AndOnaOrRight [label="Or"]
+State2AndOnaOrRight -> State1
+State2AndOnaOrRight -> State2
+State3 [peripheries=2, color=green]
+}

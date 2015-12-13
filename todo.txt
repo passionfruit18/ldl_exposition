@@ -19,10 +19,10 @@ dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
 
 > Make versions of translations with reachability.
 
-d2n = d2nNaive
-d2n = d2nReachable
+n2d = n2dNaive
+n2d = n2dReachable
 
-> A more general view: Automata are things which can be *queried*.
+> A possible (experimental) reformulation: Automata are things which can be *queried*.
 What is the initial state, is this a final state, what is the transition on this etc.What I have now, where these items are explicitly stored, is just one implementation of that. More generally, those things could be ready to be computed but not actually computed. i.e. lazy. Algorithms which work on automata, use them to search a state space (including translations between automata themselves). Translated automata then just do compositions of these queries. Of course, they could be 'realised' into actual state...
 
 Something like this:
@@ -39,11 +39,18 @@ a2n :: ((FAquery q a (BasicPropLogic q) m), (FAquery q a (S.Set q) n)) => m -> n
 a2n afa =
 	blah blah blah
 
+> I'm starting to think there's no point in having "DFAs" at all, since there is no guarantee in practical programming of having the transition function be a total function anyways.
+
+*** Graph Algorithms ***
+NFA emptiness
+
+*** LDL to AFA ***
+Write the translation
 
 *** Graph Drawing ***
 
-Make 'pass forward my name' rather than 'request backward for my name'
+Make 'pass forward my name' rather than 'request backward for my name' --> DONE
 
 *** Logic & Dependents ***
 
-Change Prog to Reg
+Change Prog to Reg --> DONE

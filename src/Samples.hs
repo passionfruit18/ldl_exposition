@@ -13,30 +13,46 @@ instance Show Label where
 
 type Alphabet = Label
 
+newtype State = St Int deriving (Eq, Ord)
+instance Show State where
+    show (St i) = "State" ++ show i
+
+class LabelState q where
+    labelState :: q -> String
+instance LabelState State where
+    labelState (St i) = show i
+
 as :: S.Set Alphabet
 as = S.fromList $ Prelude.map L ['a','b','c']
 
-type State = Int
 qs :: S.Set State
-qs = S.fromList [1,2,3,4,5]
+qs = S.fromList $ Prelude.map St [1,2,3,4,5]
 
 afa1 :: AFA State Alphabet
-afa1 = FA as qs 1 (ATransition t) S.empty where
-	t = M.fromList [((1,L 'a'), PropConst False)]
+afa1 = FA as qs (St 1) (ATransition t) S.empty where
+	t = M.fromList [((St 1,L 'a'), PropConst False)]
 	-- 1 x a -> false
 
 afa2 :: AFA State Alphabet
-afa2 = FA as qs 1 (ATransition t) (S.singleton 3) where
-	t = M.fromList [((1, L 'a'), form)]
-	form = And (Or (PropVar 3) (PropVar 2)) (Or (PropVar 4) (PropVar 5))
+afa2 = FA as qs (St 1) (ATransition t) (S.singleton (St 3)) where
+    t = M.fromList [((St 1, L 'a'), form)]
+    form = mapLog id St $ And (Or (PropVar 3) (PropVar 2)) (Or (PropVar 4) (PropVar 5))
+afa3 :: AFA State Alphabet
+afa3 = FA as qs (St 1) (ATransition t) (S.singleton (St 3)) where
+    t = M.fromList [((St 1, L 'a'), form), ((St 1, L 'b'), form2),
+                    ((St 2, L 'a'), form3)]
+    form = mapLog id St $ And (Or (PropVar 3) (PropVar 2)) (Or (PropVar 4) (PropVar 5))
+    form2 = mapLog id St $ And (Or (PropVar 2) (PropConst True)) (Or (PropConst True) (PropConst True))
+    form3 = mapLog id St $ And (Or (PropVar 3) (PropVar 4)) (Or (PropVar 1) (PropVar 2))
+    
 
 dfa1 :: DFA State Alphabet
-dfa1 = FA as qs 1 (DTransition t) (S.fromList [2,3]) where
-	t = M.fromList [((1,L 'a'), 2),
-					((2,L 'b'), 1),
-					((3,L 'c'), 1),
-					((1,L 'b'), 1),
-					((1,L 'a'), 3)]
+dfa1 = FA as qs (St 1) (DTransition t) (S.map St $ S.fromList [2,3]) where
+	t = M.fromList [((St 1,L 'a'), St 2),
+					((St 2,L 'b'), St 1),
+					((St 3,L 'c'), St 1),
+					((St 1,L 'b'), St 1),
+					((St 1,L 'a'), St 3)]
 
 dfa2 = reach $ n2d $ a2n afa2 -- This doesn't work! Probably because the translation is a bit too naive.
 
