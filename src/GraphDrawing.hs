@@ -42,28 +42,39 @@ x +-+ y = x ++ " " ++ y
 
 -- * Instances for Drawable
 
+initString = "init  [shape=polygon,style=bold,sides=6,color=lightblue]"
+finalString = "[peripheries=2, color=green]"
+preamble qs q = [show q +-+ label (labelState q) | q <- S.toList qs] ++
+				["init ->" +-+ show q, initString]
+postamble fs = [show q +-+ finalString | q <- S.toList fs]
 
 -- | Draw DFAs.
 -- Prints every part of the graph specified by
 -- the transition function and final state set and start state.
 -- So make sure it's reachable first!
-instance (Show q, Show a, Ord q, Ord a) => Drawable (DFA q a) where
+instance (Show q, LabelState q, Show a, Ord q, Ord a) => Drawable (DFA q a) where
 	draw (FA as qs q (DTransition dt) fs) =
-		["init -> " ++ show q] ++
-		["init  [shape=polygon,style=bold,sides=6,color=lightblue]"] ++
+		preamble qs q ++
 		[labelTransition (show q) (show q') (show a)
 			| a <- S.toList as, q <- S.toList qs, Just q' <- [M.lookup (q,a) dt]] ++
-		[show q ++ "[peripheries=2, color=green]" | q <- S.toList fs]
+		postamble fs
+
+-- | Draw NFAs.
+instance (Show q, LabelState q, Show a, Ord q, Ord a) => Drawable (NFA q a) where
+	draw (FA as qs q (NTransition nt) fs) =
+		preamble qs q ++
+		[labelTransition (show q)  (show q') (show a) 
+			| a <- S.toList as, q <- S.toList qs, q' <- S.toList (setLookup (q,a) nt)] ++
+		postamble fs
+
 
 -- | Draw AFAs.
 instance (Show q, Show a, Ord q, Ord a, LabelState q) => Drawable (AFA q a) where
 
 	draw (FA as qs q (ATransition at) fs) =
-		[show q +-+ label (labelState q) | q <- S.toList qs] ++
-		["init ->" +-+ show q] ++
-		["init  [shape=polygon,style=bold,sides=6,color=lightblue]"] ++
+		preamble qs q ++
 		draw at ++ -- draw the transitions, which are quite involved since they have boolean formulas
-		[show q +-+ "[peripheries=2, color=green]" | q <- S.toList fs]
+		postamble fs
 
 instance (Show q, Show a, LabelState q, Ord q, Ord a) => Drawable (M.Map (q,a) (BasicPropLogic q)) where
 	draw at =

@@ -27,7 +27,7 @@ foldLog :: (Bool -> r) ->
            (b -> r -> r -> r) ->
            (PropLogic p u b) ->
            r
-foldLog cr pr nr ar orr ur br log = f log where
+foldLog cr pr nr ar orr ur br = f where
     f (PropConst c) = cr c
     f (PropVar p) = pr p
     f (Not log) = nr $ f log
@@ -115,5 +115,20 @@ To translate LDL to AFAs, we will need negation normal-form (nnf) LDL.
 This will have square as a built in operator rather than derived from diamond.
 -}
 
+type LDLogicNNF p = PropLogic p (DiamondOrSquare p) Void
+type DiamondOrSquare p = (Bool, Reg p)
+-- the Bool is True if it is a Diamond expression, False otherwise.
+negateNNF :: LDLogicNNF p -> LDLogicNNF p
+negateNNF = foldLog cr pr nr arr orr ur br where
+  cr c = PropConst (not c)
+  pr p = Not (PropVar p)
+  nr = id -- this is the 'double negatives cancel' part
+  arr log1 log2 = Or log1 log2 -- Ors turn into Ands and vice versa
+  orr log1 log2 = And log1 log2
+  ur (c, reg) log1 = Unary (not c, reg) log1 -- Square modalities turn into Diamonds / Brackets into Angle Brackets
+  br b log1 log2 = error "Should not be any binary modalities in negateNNF"
 
-
+ldl2nnf :: LDLogic p -> LDLogicNNF p
+ldl2nnf = foldLog PropConst PropVar negateNNF And Or ur br where
+  ur reg log1 = Unary (True, reg) log1
+  br b log1 log2 = error "Should not be any binary modalities"

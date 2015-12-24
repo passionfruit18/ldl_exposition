@@ -383,3 +383,75 @@ State2AndOnaOrRight -> State1
 State2AndOnaOrRight -> State2
 State3 [peripheries=2, color=green]
 }
+
+Digraph nfa1 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1[label="a"]
+State1 -> State2[label="a"]
+State1 -> State3[label="a"]
+State1 -> State4[label="a"]
+State3[peripheries=2, color=green]
+}
+
+Digraph dfa10 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State3[label="a"]
+State1 -> State1[label="b"]
+State2 -> State1[label="b"]
+State3 -> State1[label="c"]
+State2[peripheries=2, color=green]
+State3[peripheries=2, color=green]
+}
+
+Digraph dfa11 {
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State3[label="a"]
+State1 -> State1[label="b"]
+State2 -> State1[label="b"]
+State3 -> State1[label="c"]
+State2[peripheries=2, color=green]
+State3[peripheries=2, color=green]
+}
+
+Digraph dfa12 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+1 -> 3[label="a"]
+1 -> 1[label="b"]
+2 -> 1[label="b"]
+3 -> 1[label="c"]
+2[peripheries=2, color=green]
+3[peripheries=2, color=green]
+}
+
+
+Digraph nfa2 {
+init -> 1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+1 -> 1[label="a"]
+1 -> 2[label="a"]
+1 -> 3[label="a"]
+1 -> 4[label="a"]
+3[peripheries=2, color=green]
+}
+
+Digraph nfa1det {
+init -> {1}
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+{1} -> {1, 2, 3, 4}[label="a"]
+{1, 2, 3, 4} -> {1, 2, 3, 4}[label="a"]
+{1, 2, 3, 4}[peripheries=2, color=green]
+}
+
+Digraph nfa1det2 {
+SetState1 [label="{1}"]
+SetState1State2State3State4 [label="{1, 2, 3, 4}"]
+init -> SetState1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+SetState1 -> SetState1State2State3State4[label="a"]
+SetState1State2State3State4 -> SetState1State2State3State4[label="a"]
+SetState1State2State3State4 [peripheries=2, color=green]
+}

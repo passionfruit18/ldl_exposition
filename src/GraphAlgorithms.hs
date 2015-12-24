@@ -41,7 +41,7 @@ dReverse (FA as qs q1 (DTransition dt) fs) =
             let nextReached = S.fromList (M.elems currentTransition) in
             if currentReached == nextReached
                 then (currentReached, currentTransition)
-                else process (nextReached,
+                else process (S.union currentReached nextReached,
                             M.union currentTransition
                                     (reach (S.difference nextReached currentReached)))
         reach qss = M.fromList $ S.toList [((sub, a), pre sub dt a) | sub <- qss, a <- as ]

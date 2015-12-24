@@ -22,6 +22,8 @@ dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
 n2d = n2dNaive
 n2d = n2dReachable
 
+This is proving a bit hard to make work... Or rather opaque.
+
 > A possible (experimental) reformulation: Automata are things which can be *queried*.
 What is the initial state, is this a final state, what is the transition on this etc.What I have now, where these items are explicitly stored, is just one implementation of that. More generally, those things could be ready to be computed but not actually computed. i.e. lazy. Algorithms which work on automata, use them to search a state space (including translations between automata themselves). Translated automata then just do compositions of these queries. Of course, they could be 'realised' into actual state...
 
@@ -45,7 +47,11 @@ a2n afa =
 NFA emptiness
 
 *** LDL to AFA ***
-Write the translation
+Write the translation:
+ did some NNF stuff... almost ready to put in the transition function of the AFA...
+I wonder, perhaps the AFA -> NFA -> DFA all work properly? It all hinges on 'reach'.
+I need to actually test these things. Well, I tested NFA -> DFA with reach, which works well.
+
 
 *** Graph Drawing ***
 

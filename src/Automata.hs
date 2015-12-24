@@ -7,6 +7,9 @@ import qualified Data.Set.Monad as S -- Monadic Set
 import qualified Data.Map as M
 import Logic
 
+set2map :: (Ord k, Ord e) => S.Set (k, e) -> M.Map k e
+set2map = M.fromList $ S.toList
+
 -- * Types of Automata
 
 newtype DTransition q a = 
@@ -74,13 +77,14 @@ bigOr = S.foldr Or (PropConst False) . S.map PropVar
 nE2n :: NFAE q a -> NFA q a
 nE2n = error "Not implemented yet!"
 
-n2d :: (Ord a, Ord q) =>
-        NFA q a -> DFA (S.Set q) a
-n2d (FA as qs1 q1 (NTransition nt) fs1) =
+n2d :: (Ord a, Ord q) => NFA q a -> DFA (S.Set q) a
+n2d = n2dReach
+n2dNaive :: (Ord a, Ord q) => NFA q a -> DFA (S.Set q) a
+n2dNaive (FA as qs1 q1 (NTransition nt) fs1) =
     FA as qs2 q2 (DTransition dt) fs2 where
     q2 = S.singleton q1
     qs2 = subsets qs1 -- subset construction
-    dt = M.fromList $ S.toList $ -- convert set to list to map
+    dt = set2map $ -- convert set to list to map
           do
             sub <- qs2 -- monadic usage of set
             a <- as
@@ -102,16 +106,55 @@ subsets = S.foldr
                       (S.map (S.insert a) subs))
           (S.singleton S.empty)
 
+-- | Not so naive n2d transformation, getting only the reachable part
+-- and also handling the transition function having no entry for a given key.
+n2dReach :: (Ord a, Ord q) => NFA q a -> DFA (S.Set q) a
+n2dReach (FA as qs1 q1 (NTransition nt) fs1) =
+    (FA as qs2 q2 (DTransition dt) fs2) where
+        q2 = S.singleton q1
+        (qs2, dt) = reach (S.singleton q2) postMap elemsReached
+        postMap qs =
+            set2map
+            [((sub, a), sub >>= \q -> setLookup (q,a) nt) | sub <- qs, a <- as]
+        elemsReached t = S.fromList (M.elems t)
+        fs2 = S.filter (\sub -> not $ S.null $ S.intersection sub fs1) qs2
+setLookup :: (Ord q, Ord a, Ord r) => (q,a) -> M.Map (q,a) (S.Set r) -> S.Set r
+setLookup k t =
+    case M.lookup k t of
+        Just s -> s
+        Nothing -> S.empty
+type Transition q a r = M.Map (q,a) r
+-- | reach takes a set s0 of type Set q, function postMap :: Set q -> Transition q a r,
+-- function elemsReached of type Transition q a r -> S.Set q, and gives the pair (qs, t)
+-- such that qs is 'closed' under (elemsReached . postMap) and t = postMap qs.
+-- postMap qs should give the transitions from states in qs.
+-- elemsReached t should somehow transform the image of t into a set of elements.
+reach :: (Ord q, Ord a) => S.Set q ->
+            (S.Set q -> Transition q a r) ->
+            (Transition q a r-> S.Set q) -> 
+            (S.Set q, Transition q a r)
+reach s0 postMap elemsReached = reach' (s0, postMap s0) where
+    -- invariant: currentTransition = postMap currentReached
+    reach' (currentReached, currentTransition) =
+        let nextReached = elemsReached currentTransition in
+        if (S.isSubsetOf nextReached currentReached)
+            then (currentReached, currentTransition)
+            else reach' (S.union currentReached nextReached,
+                        M.union currentTransition
+                                (postMap (S.difference nextReached currentReached)))
+
+
 -- ** AFAs to NFAs
 
-a2n :: (Ord a, Ord q) =>
-        AFA q a -> NFA (S.Set q) a
-a2n (FA as qs1 q1 (ATransition at) fs1) =
+a2n :: (Ord a, Ord q) => AFA q a -> NFA (S.Set q) a
+a2n = a2nNaive
+
+a2nNaive :: (Ord a, Ord q) => AFA q a -> NFA (S.Set q) a
+a2nNaive (FA as qs1 q1 (ATransition at) fs1) =
     FA as qs2 q2 (NTransition nt) fs2 where
     q2 = S.singleton q1
     qs2 = subsets qs1
-    nt = M.fromList $
-         S.toList $
+    nt = set2map $
           [((sub0, a), minSat qs1
             -- nt (sub0, a) maps to subsets sub1 of qs which satisfy all ... 
             -- boolean formulas reached from a state q of sub0 via a on at. 
@@ -139,9 +182,37 @@ minSat total pred = -- minimal subsets of total satisfying monotonic pred
             explode sub = filter pred $ S.toList $ S.map (\q -> S.delete q sub) sub
 
 
+a2nReach :: (Ord a, Ord q) => AFA q a -> NFA (S.Set q) a
+a2nReach (FA as qs1 q1 (ATransition at) fs1) =
+    FA as qs2 q2 (NTransition nt) fs2 where
+    q2 = S.singleton q1 -- NFA states are sets of AFA states
+    (qs2, nt) = reach (S.singleton q2) postMap elemsReached
+    postMap qs =
+        set2map
+        [((sub0, a), minSat qs1
+            (\sub1 -> and $ S.toList $
+                [satisfy sub1 (M.lookup (q,a) at) | q <- sub0]))
+        | sub0 <- qs, a <- as]
+    elemsReached t = S.unions (M.elems t)
+    satisfy s Nothing = True
+    -- not sure about this case, when the lookup 'fails'. I think it should be the unit of && (implicit in 'and').
+    -- This makes it dual to the case in n2dReach where the S.empty is the unit of S.union (implicit in >>=).
+    satisfy s (Just l) = satisfyBasicProp (flip S.member s) l
+    fs2 = [ sub | sub <- qs2, S.isSubsetOf sub fs1 ]
+
 -- * LDL to AFAs
-ldl2afa :: LDLogic p -> AFA (LDLogic p) (S.Set p) -- states Fischer-Ladner closure and alphabet 2^P
-ldl2afa = error "Not implemented yet"
+ldl2afa :: S.Set (S.Set p) -> LDLogic p -> AFA (LDLogic p) (S.Set p) -- states Fischer-Ladner closure and alphabet 2^P
+ldl2afa as ldl = let ldlN = ldl2nnf ldl in
+    FA (as qs q (ATransition at) fs) where
+        q = ldlN
+        (qs, at) = reach (S.singleton q) postMap elemsReached
+        postMap qs = set2map [((ldl, a), f ldl a) | ldl <- qs, a <- as]
+        f ldl a = error "Not defined yet. This is the place to put the thing from the paper."
+        elemsReached t = concat (map collapse) (M.elems t)
+        -- collapse the BasicPropLogic formulae (which have LDLNNF formulae as propositions) into lists of LDL formulae
+        collapse = foldLog (\c -> []) id id (++) (++) (error "Unary") (error "Binary")
+        -- first id is for PropVars, second is for negation
+        fs = S.empty
 
 -- * Emptiness testing
 

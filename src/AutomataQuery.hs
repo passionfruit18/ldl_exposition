@@ -135,7 +135,7 @@ reach s0 postMap elemsReached = reach' (s0, postMap s0) where
         let nextReached = elemsReached currentTransition in
         if currentReached == nextReached
             then (currentReached, currentTransition)
-            else reach (nextReached,
+            else reach' (S.union currentReached nextReached,
                         M.union currentTransition
                                 (postMap (S.difference nextReached currentReached)))
 
