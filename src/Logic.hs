@@ -43,6 +43,8 @@ satisfyBasicProp :: (p -> Bool) -> BasicPropLogic p -> Bool
 satisfyBasicProp interpret =
   foldLog id interpret not (&&) (||) (\x y -> True) (\x y z -> True)
 
+
+
 connect :: String -> String -> String -> String
 connect op s1 s2 = "(" ++ s1 ++ op ++ s2 ++ ")"
 
@@ -84,9 +86,9 @@ foldReg :: (BasicPropLogic p -> r) ->
 			  (r -> r -> r) ->
 			  (r -> r -> r) ->
 			  (r -> r) -> Reg p -> r
-foldReg basic ldl prr crr sr reg = f reg where
-	f (Base b) = basic b
-	f (Test f) = ldl f
+foldReg br fr prr crr sr reg = f reg where
+	f (Base b) = br b
+	f (Test f) = fr f
 	f (Plus p1 p2) = prr (f p1) (f p2)
 	f (Comp p1 p2) = crr (f p1) (f p2)
 	f (Star p) = sr (f p)
@@ -103,6 +105,8 @@ diamond :: Reg p -> LDLogic p -> LDLogic p
 diamond = Unary
 square :: Reg p -> LDLogic p -> LDLogic p
 square reg l = Not $ diamond reg $ Not l
+test_only :: Reg p -> Bool
+test_only = foldReg (\b -> False) (\f -> True) (&&) (&&) id where
 
 
 ltl2ldl :: LTLogic p -> LDLogic p
@@ -115,17 +119,26 @@ To translate LDL to AFAs, we will need negation normal-form (nnf) LDL.
 This will have square as a built in operator rather than derived from diamond.
 -}
 
-type LDLogicNNF p = PropLogic p (DiamondOrSquare p) Void
-type DiamondOrSquare p = (Bool, Reg p)
--- the Bool is True if it is a Diamond expression, False otherwise.
+type LDLogicNNF p = PropLogic (Literal p) (DiamondOrSquare p) Void
+data DiamondOrSquare p = Diamond (Reg p) | Square (Reg p)
+
+negate_dos :: DiamondOrSquare p -> DiamondOrSquare p
+negate_dos (Diamond x) = (Square x)
+negate_dos (Square x) = (Diamond x)
+
+data Literal p = Positive p | Negative p
+negate_literal :: Literal p -> Literal p
+negate_literal (Positive x) = Negative x
+negate_literal (Negative x) = Positive x
+
 negateNNF :: LDLogicNNF p -> LDLogicNNF p
 negateNNF = foldLog cr pr nr arr orr ur br where
   cr c = PropConst (not c)
-  pr p = Not (PropVar p)
+  pr lit = PropVar (negate_literal lit)
   nr = id -- this is the 'double negatives cancel' part
   arr log1 log2 = Or log1 log2 -- Ors turn into Ands and vice versa
   orr log1 log2 = And log1 log2
-  ur (c, reg) log1 = Unary (not c, reg) log1 -- Square modalities turn into Diamonds / Brackets into Angle Brackets
+  ur dos log1 = Unary (negate_dos dos) log1 -- Square modalities turn into Diamonds / Brackets into Angle Brackets
   br b log1 log2 = error "Should not be any binary modalities in negateNNF"
 
 ldl2nnf :: LDLogic p -> LDLogicNNF p

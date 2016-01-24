@@ -8,7 +8,7 @@ import qualified Data.Map as M
 import Logic
 
 set2map :: (Ord k, Ord e) => S.Set (k, e) -> M.Map k e
-set2map = M.fromList $ S.toList
+set2map = M.fromList . S.toList
 
 -- * Types of Automata
 
@@ -124,6 +124,7 @@ setLookup k t =
         Just s -> s
         Nothing -> S.empty
 type Transition q a r = M.Map (q,a) r
+
 -- | reach takes a set s0 of type Set q, function postMap :: Set q -> Transition q a r,
 -- function elemsReached of type Transition q a r -> S.Set q, and gives the pair (qs, t)
 -- such that qs is 'closed' under (elemsReached . postMap) and t = postMap qs.
@@ -147,7 +148,7 @@ reach s0 postMap elemsReached = reach' (s0, postMap s0) where
 -- ** AFAs to NFAs
 
 a2n :: (Ord a, Ord q) => AFA q a -> NFA (S.Set q) a
-a2n = a2nNaive
+a2n = a2nReach
 
 a2nNaive :: (Ord a, Ord q) => AFA q a -> NFA (S.Set q) a
 a2nNaive (FA as qs1 q1 (ATransition at) fs1) =
@@ -167,7 +168,7 @@ a2nNaive (FA as qs1 q1 (ATransition at) fs1) =
 
 minSat :: forall q. Ord q =>
         S.Set q -> (S.Set q -> Bool) -> S.Set (S.Set q)
-minSat total pred = -- minimal subsets of total satisfying monotonic pred
+minSat total pred = -- minimal subsets of "total" set that satisfy the monotonic pred(icate)
     if not (pred total) then S.empty else
         S.fromList $ process [total] where
             process :: [S.Set q] -> [S.Set q]
@@ -182,6 +183,9 @@ minSat total pred = -- minimal subsets of total satisfying monotonic pred
             explode sub = filter pred $ S.toList $ S.map (\q -> S.delete q sub) sub
 
 
+setSatBasicProp :: S.Set p -> BasicPropLogic p -> Bool
+setSatBasicProp s l = satisfyBasicProp (flip S.member s) l
+
 a2nReach :: (Ord a, Ord q) => AFA q a -> NFA (S.Set q) a
 a2nReach (FA as qs1 q1 (ATransition at) fs1) =
     FA as qs2 q2 (NTransition nt) fs2 where
@@ -194,28 +198,67 @@ a2nReach (FA as qs1 q1 (ATransition at) fs1) =
                 [satisfy sub1 (M.lookup (q,a) at) | q <- sub0]))
         | sub0 <- qs, a <- as]
     elemsReached t = S.unions (M.elems t)
-    satisfy s Nothing = True
-    -- not sure about this case, when the lookup 'fails'. I think it should be the unit of && (implicit in 'and').
-    -- This makes it dual to the case in n2dReach where the S.empty is the unit of S.union (implicit in >>=).
-    satisfy s (Just l) = satisfyBasicProp (flip S.member s) l
+    satisfy s Nothing = False -- False if lookup fails. Nothing "is" false, and no assignment satisfies false.
+    satisfy s (Just l) = setSatBasicProp s l
     fs2 = [ sub | sub <- qs2, S.isSubsetOf sub fs1 ]
 
 -- * LDL to AFAs
-ldl2afa :: S.Set (S.Set p) -> LDLogic p -> AFA (LDLogic p) (S.Set p) -- states Fischer-Ladner closure and alphabet 2^P
-ldl2afa as ldl = let ldlN = ldl2nnf ldl in
-    FA (as qs q (ATransition at) fs) where
+
+ldl2afa :: S.Set (S.Set p) -> LDLogic p -> AFA (LDLogic p) (S.Set p)
+-- states are the Fischer-Ladner closure of the given formula,
+-- and the alphabet comprises sets of "p". i.e. Propositional assignments over p.
+ldl2afa assigns ldl = let ldlN = ldl2nnf ldl in
+    FA (assigns qs q (ATransition at) fs) where
         q = ldlN
         (qs, at) = reach (S.singleton q) postMap elemsReached
-        postMap qs = set2map [((ldl, a), f ldl a) | ldl <- qs, a <- as]
-        f ldl a = error "Not defined yet. This is the place to put the thing from the paper."
+        postMap qs = set2map [((ldlN_, assign), delta assign ldlN_) | ldlN_ <- qs, assign <- assigns] -- is it a problem to use ldl again?
+        -- Usually we would have delta :: States X Alphabet -> PosBool States,
+        -- but I switched the arguments to take advantage of currying.
+        
         elemsReached t = concat (map collapse) (M.elems t)
         -- collapse the BasicPropLogic formulae (which have LDLNNF formulae as propositions) into lists of LDL formulae
         collapse = foldLog (\c -> []) id id (++) (++) (error "Unary") (error "Binary")
         -- first id is for PropVars, second is for negation
         fs = S.empty
+delta :: S.Set p -> LDLogicNNF p -> BasicPropLogic (LDLogicNNF p)
+delta assign = da where
+    da (PropConst b) = PropConst b
+    da (PropVar lit) = pr lit where
+        pr (Positive p) = PropConst (S.member p assign)
+        pr (Negative p) = PropConst (not $ S.member p assign)
+    da (Not x) = (error "negation in NNF formula")
+    da (And f1 f2) = And (delta assign f1) (delta assign f2)
+    da (Or f1 f2) = Or (delta assign f1) (delta assign f2)
+    da (Unary (Diamond reg) f) = urf True f reg
+    da (Unary (Square reg) f) = urf False f reg
+    urf k f = g where -- boolean, boolean function 1, 2, modality
+        (b, bf1, bf2, m) =
+            if k then (False, And, Or, Diamond)
+                else (True, Or, And, Square)
+        g (Base basicf) =
+            if (setSatBasicProp assign basicf) then f else b
+        g (Test l) = error (bf1 (da l) (da f)) -- but l is LDLogic, not LDLogicNNF, by the type of Reg...
+        g (Plus r1 r2) = bf2 (g r1) (g r2)
+        g (Comp r1 r2) = da (Unary (m r1) $ Unary (m r2) f)
+        g (Star r) = if test_only r then da f else bf2 (da f) (da $ Unary (m1 r) $ Unary (m1 (Star r)) f)
+    da (Binary _ _ _) = error "no binary modality"
+
+{-
+I have to make a choice. The double recursiveness makes it difficult to introduce a variant
+of LDLogic, namely LDLogicNNF, since the Reg given to LDLogicNNF refers back to LDLogic.
+I don't know if Haskell has any fancy features to paramaterise the back-reference.
+In absence of that, either I have to make a RegNNF, or I have to expand LDLogic so that it can have
+negation normal form materialised within it (i.e. I can do away with the "Not"s).
+If I make a RegNNF, I'll also have to make lots of helper functions.
+If I expand LDLogic, it might break other things...
+I suppose I'll have to take a break here.
+-}
 
 -- * Emptiness testing
 
 dfaEmpty :: DFA q a -> Bool
 dfaEmpty = error "Not implemented yet"
 
+afaEmpty :: AFA q a -> Bool
+afaEmpty afa = let (FA as qs q (NTransition nt) fs) = a2nReach afa in
+                S.empty fs
