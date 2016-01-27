@@ -26,8 +26,18 @@ set-monad:
 
 *****   Todo   *****
 
+*** Display ***
+
+> Pretty print sets
+
+* Graph Drawing *
+
+Make 'pass forward my name' rather than 'request backward for my name' --> DONE
+
+
 *** LDL to AFA ***
 > make LDLogicNNF datatype
+
 
  
 *** Automata ***
@@ -68,9 +78,6 @@ I wonder, perhaps the AFA -> NFA -> DFA all work properly? It all hinges on 'rea
 I need to actually test these things. Well, I tested NFA -> DFA with reach, which works well.
 
 
-*** Graph Drawing ***
-
-Make 'pass forward my name' rather than 'request backward for my name' --> DONE
 
 *** Logic & Dependents ***
 

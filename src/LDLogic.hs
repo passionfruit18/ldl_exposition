@@ -78,10 +78,14 @@ instance Negatable (LDLogicNNF p) where
     br b log1 log2 = error "Should not be any binary modalities in negateNNF"
 
 -- |Literal of p
-data Literal p = Positive p | Negative p deriving (Eq, Ord, Show)
+data Literal p = Positive p | Negative p deriving (Eq, Ord)
 instance Negatable (Literal p) where
   negate (Positive x) = (Negative x)
   negate (Negative x) = (Positive x)
+
+instance Show p => Show (Literal p) where
+  show (Positive x) = show x
+  show (Negative x) = "!" ++ show x
 
 -- |DOS: Diamond or Square modality.
 data DOS p = Diamond (RegNNF p) | Square (RegNNF p) deriving (Eq, Ord, Show)

@@ -10,10 +10,12 @@ import Control.Newtype (op)
 
 -- this defines the concrete syntax for LDL in a way that can be parsed.
 
-type Proposition = String
+newtype Proposition = Proposition String deriving (Eq, Ord)
 type LDLogic_ = LDLogic Proposition
 type Reg_ = Reg Proposition
 type BasicPropLogic_ = BasicPropLogic Proposition
+instance Show Proposition where
+	show (Proposition s) = s
 
 data Token = 
 	PROP Proposition -- alphanumeric strings used for propositions
@@ -29,7 +31,7 @@ data IdKind =
 	MONLOGOP | LOGOP | REGOP | POSTREGOP deriving (Eq, Show)
 	-- not sure if I'll need this.
 
-kwlookup = make_kwlookup PROP [("true", CONST True), ("false", CONST False)]
+kwlookup = make_kwlookup (PROP . Proposition) [("true", CONST True), ("false", CONST False)]
 instance Show Token where
 	show t =
 		case t of

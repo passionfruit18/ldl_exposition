@@ -455,3 +455,15 @@ SetState1 -> SetState1State2State3State4[label="a"]
 SetState1State2State3State4 -> SetState1State2State3State4[label="a"]
 SetState1State2State3State4 [peripheries=2, color=green]
 }
+
+Digraph test1 {
+State1 [label="1"]
+State2 [label="2"]
+State3 [label="3"]
+State4 [label="4"]
+State5 [label="5"]
+init -> State1
+init  [shape=polygon,style=bold,sides=6,color=lightblue]
+State1 -> State1FalseOna[label="a"]
+State1FalseOna [label="False"]
+}

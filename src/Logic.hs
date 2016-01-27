@@ -59,17 +59,16 @@ logic_pretty_print =
 	(connect "&&")
 	(connect "||")
 
-logic_pretty_print_ =
-  foldLog show id
-  ("!"++)
-  (connect "&&")
-  (connect "||")
+type BasicPropLogic p = PropLogic p Void Void
+basic_pretty_print :: Show p => BasicPropLogic p -> String
+basic_pretty_print = logic_pretty_print
+  (\u s -> "")
+  (\b s1 s2 -> "")
 
 data Void --empty type
 deriving instance Eq (Void)
 deriving instance Ord (Void)
 deriving instance Show (Void)
-type BasicPropLogic p = PropLogic p Void Void
 data UnaryLTL = Next
 data BinaryLTL = Until
 type LTLogic p = PropLogic p UnaryLTL BinaryLTL
