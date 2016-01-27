@@ -1,4 +1,5 @@
 *.gv
 *~
-debug/*
+debug/
+dist/
 *.html
