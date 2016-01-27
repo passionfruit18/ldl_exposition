@@ -16,6 +16,12 @@ Logic -> Automata -> Samples -> GraphDrawing
 Part 2:
 Environment -> Parsing -> LDLParser -> LDLInterpreter
 				 Logic -> LDLParser
+
+				 new structure:
+
+				 Logic -> Reg -> LDLogic
+				 we should have LDLogic -> LDLParser rather than Logic -> LDLParser
+
 Interpreter:
 Lets you enter LDL formulae in the syntax
 ```
@@ -27,4 +33,5 @@ reg ::= bpl | reg+reg | reg;reg | reg* | ldl?
 bpl ::= true | false | var |
 		bpl && bpl | bpl || bpl | !bpl
 ```
+bpl is basic propositional logic.
 && binds tighter than ||.

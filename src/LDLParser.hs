@@ -2,7 +2,11 @@
 module LDLParser(ldlParser, regParser, lexer, LDLogic_, Reg_, BasicPropLogic_) where
 import Parsing
 import Logic -- this is the abstract syntax which we want to parse into.
+import Reg
+import LDLogic
 import Data.Char
+import Control.Monad (liftM)
+import Control.Newtype (op)
 
 -- this defines the concrete syntax for LDL in a way that can be parsed.
 
@@ -97,7 +101,7 @@ p_ldlPrimary = -- a proposition, or, recursively, a formula in parentheses.
 	<+> do eat LPAR; f <- p_ldlFormula; eat RPAR; return f
 
 p_reg :: Parser Token Reg_
-p_reg = p_disj where
+p_reg = liftM Reg p_disj where
 	p_disj = p_chainr (\PLUS -> Plus) (eat PLUS) p_conj
 	p_conj = p_chainr (\SEMI -> Comp) (eat SEMI) p_regTerm1
 
@@ -111,7 +115,7 @@ p_regTerm1 =
 p_regPrimary = 
 	do f <- p_ldlFormula; eat TEST; return (Test f)
 	<+> do bf <- p_basicFormula; return (Base bf)
-	<+> do eat LPAR; r <- p_reg; eat RPAR; return r
+	<+> do eat LPAR; r <- p_reg; eat RPAR; return (op Reg r)
 
 p_basicFormula :: Parser Token (BasicPropLogic Proposition)
 p_basicFormula = dnf p_basicTerm1

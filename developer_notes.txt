@@ -3,17 +3,32 @@
 ***Stuff to maintain project:***
 
 To generate documentation:
-cabal configure
-cabal haddock --hyperlink-source
+	cabal configure
+	cabal haddock --hyperlink-source
+	  Doing this checks for compilation errors, so it's a good way to check everything 'works' somewhat.
 
-git status
-git add
-git commit -m
-git push
+git commands:
+	git status
+	git add
+	git commit -m
+	git push
 
-dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
+to draw graphs:
+	dot -Tpdf GraphDrawingOutput.gv -o GraphDrawingOutput.pdf
+
+
+*** Notes on packages used ***
+newtype:
+	wrapping and unwrapping Newtypes.
+set-monad:
+	using Sets as Monads.
+
 
 *****   Todo   *****
+
+*** LDL to AFA ***
+> make LDLogicNNF datatype
+
  
 *** Automata ***
 
@@ -41,10 +56,10 @@ a2n :: ((FAquery q a (BasicPropLogic q) m), (FAquery q a (S.Set q) n)) => m -> n
 a2n afa =
 	blah blah blah
 
-> I'm starting to think there's no point in having "DFAs" at all, since there is no guarantee in practical programming of having the transition function be a total function anyways.
+> I'm starting to think there's no point in having "DFAs" at all, since there is no guarantee in practical programming of having the transition function be a total function anyways. --> We can weaken the notion of DFA to have partial functions. At least a partial function is not a general relation.
 
 *** Graph Algorithms ***
-NFA emptiness
+NFA emptiness --> Actually for any AFA A, you can just inspect the final set state of a2nreach A...
 
 *** LDL to AFA ***
 Write the translation:
