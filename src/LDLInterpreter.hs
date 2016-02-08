@@ -18,21 +18,25 @@ ldl_pretty_print = logic_pretty_print
 	(\u s -> "<" ++ reg_pretty_print u ++ ">" ++ s)
 	(\b s1 s2 -> "")
 
-sep1 = take 60 (repeat '=')
-sep2 = take 60 (repeat '-')
+sep1 = replicate 100 '='
+sep2 = replicate 60 '-'
 ldl_respond :: LDLogic_ -> String
 ldl_respond ldl =
 	let s1 = ldl_nnf_pretty_print $ ldl2nnf ldl;
 		alphabet = subsets (S.fromList $ ldl_propositions ldl);
 		afa = ldl2afa alphabet ldl;
 		s2 = ldl2afa_pretty_print afa;
-		s3 = ldl2afa2nfa_pretty_print $ a2nReach afa in
+		nfa = a2nReach afa;
+		s3 = ldl2afa2nfa_pretty_print $ nfa;
+		s4 = if S.null (final nfa) then "no" else "yes" in
 	unlines [sep1,
 			"LDL: " ++ s1,
 			sep2,
 			"AFA: " ++ s2,
 			sep2,
 			"NFA: " ++ s3,
+			sep2,
+			"Satisfiable? According to NFA's final state set, " ++ s4,
 			sep1] 
 
 
