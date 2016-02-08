@@ -37,29 +37,26 @@ ldl_respond ldl =
 
 
 reg_pretty_print :: Reg_ -> String
-reg_pretty_print =
-	foldReg basic_pretty_print
+reg_pretty_print = reg_T_pretty_print ldl_pretty_print . op Reg
+	{-foldReg basic_pretty_print
 	(\f -> ldl_pretty_print f ++ "?")
-	(connect "+")
-	(connect ";")
+	(connect "+" " ")
+	(connect ";" "")
 	(++"*")
-	. op Reg
+	. op Reg-}
 
 reg_nnf_pretty_print :: Show p => RegNNF p -> String
-reg_nnf_pretty_print =
-	foldReg basic_pretty_print
+reg_nnf_pretty_print = reg_T_pretty_print ldl_nnf_pretty_print . op RegNNF
+	{-foldReg basic_pretty_print
 	(\f -> ldl_nnf_pretty_print f ++ "?")
-	(connect "+")
-	(connect ";")
+	(connect "+" " ")
+	(connect ";" "")
 	(++"*")
-	. op RegNNF
+	. op RegNNF-}
 
 ldl_nnf_pretty_print :: Show p => LDLogicNNF p -> String
 ldl_nnf_pretty_print = 
-	foldLog show show -- propositional constants and variables
-	("!"++) -- not
-	(connect "&&")
-	(connect "||")
+	logic_pretty_print
 	f
 	(\b s1 s2 -> "") where
 		f (Diamond x) s = "<" ++ reg_nnf_pretty_print x ++ ">" ++ s
@@ -72,6 +69,7 @@ afa_pretty_print (FA as qs q t fs) =
 	zipWith (++)
 	fa_headings
 	[show $ ShowSet as, show $ ShowSet qs, show q, show t, show $ ShowSet fs]
+
 
 ldl2afa_pretty_print :: (Show p, Ord p) => AFA (LDLogicNNF p) (S.Set p) -> String
 ldl2afa_pretty_print (FA as qs q t fs) =
@@ -87,7 +85,8 @@ ldl2afa_pretty_print (FA as qs q t fs) =
 									" X " ++
 									(show $ ShowSet a) ++
 									" -> " ++
-									(show q2))
+									(basic_pretty_print_with ((\s -> "state("++s++")") . ldl_nnf_pretty_print) q2)
+									)
 			$ M.assocs $ op ATransition t,
 	showSetWith pr fs]
 

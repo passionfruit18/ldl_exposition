@@ -42,10 +42,10 @@ square is its dual.
 test_only :: Reg_T p q -> Bool
 test_only = foldReg (\b -> False) (\f -> True) (&&) (&&) id
 
-reg_T_pretty_print :: (Show p, Show q) => (q -> String) -> Reg_T p q -> String
+reg_T_pretty_print :: (Show p) => (q -> String) -> Reg_T p q -> String
 reg_T_pretty_print f =
 	foldReg basic_pretty_print
 	(\q -> f q ++ "?")
-	(connect "+")
-	(connect ";")
+	(connect "+" " ")
+	(connect ";" "")
 	(++"*")

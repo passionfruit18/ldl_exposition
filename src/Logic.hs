@@ -47,8 +47,8 @@ propositions :: (u -> [p] -> [p]) -> (b -> [p] -> [p] -> [p]) -> PropLogic p u b
 propositions = foldLog (\c -> []) (\p -> [p]) id (++) (++) 
 
 
-connect :: String -> String -> String -> String
-connect op s1 s2 = "(" ++ s1 ++ op ++ s2 ++ ")"
+connect :: String -> String -> String -> String -> String
+connect op sep s1 s2 = "(" ++ s1 ++ sep ++ op ++ sep ++ s2 ++ ")"
 
 logic_pretty_print :: Show p =>
   (u -> String -> String) -> (b -> String -> String -> String) ->
@@ -56,12 +56,23 @@ logic_pretty_print :: Show p =>
 logic_pretty_print =
 	foldLog show show -- propositional constants and variables
 	("!"++) -- not
-	(connect "&&")
-	(connect "||")
+	(connect "&&" " ")
+	(connect "||" " ")
 
 type BasicPropLogic p = PropLogic p Void Void
 basic_pretty_print :: Show p => BasicPropLogic p -> String
 basic_pretty_print = logic_pretty_print
+  (\u s -> "")
+  (\b s1 s2 -> "")
+
+
+
+basic_pretty_print_with :: (p -> String) -> BasicPropLogic p -> String
+basic_pretty_print_with printer = 
+  foldLog show printer
+  ("!"++) -- not
+  (connect "&&" " ")
+  (connect "||" " ")
   (\u s -> "")
   (\b s1 s2 -> "")
 

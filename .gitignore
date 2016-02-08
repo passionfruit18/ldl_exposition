@@ -3,3 +3,8 @@
 debug/
 dist/
 *.html
+
+# Ignore everything inside the test directory, except the test file and the script for testing.
+test/*
+!test/test.ldl
+!test/setup_test.sh
